@@ -123,7 +123,7 @@ fn track_stops(track: &Track) -> Option<Vec<Color32>> {
 fn paint_track(ui: &Ui, rect: Rect, track: &Track, t: &Tokens, thumb_x: f32, ring: f32) {
     let p = ui.painter();
     let y = rect.center().y;
-    let h = 1.0;
+    let h = 1.5;
     if let Some(stops) = track_stops(track) {
         // gradient: segments between stops
         let n = stops.len().max(2) - 1;
@@ -141,7 +141,7 @@ fn paint_track(ui: &Ui, rect: Rect, track: &Track, t: &Tokens, thumb_x: f32, rin
         p.rect_filled(Rect::from_min_max(pos2(rect.left(), y - h), pos2(rect.right(), y + h)), egui::CornerRadius::same(1), t.track);
     }
     // gap around the hollow thumb
-    p.rect_filled(Rect::from_center_size(pos2(thumb_x, y), vec2(ring * 2.0 + 4.0, 6.0)), 0.0, t.chrome);
+    p.rect_filled(Rect::from_center_size(pos2(thumb_x, y), vec2(ring * 2.0 + 4.0, ring * 2.0 + 2.0)), 0.0, t.chrome);
 }
 
 /// Result of a slider interaction this frame.
@@ -180,7 +180,7 @@ pub fn slider(ui: &mut Ui, spec: &ControlSpec, value: f64, enabled: bool, label_
     let pad_l = 24.0;
     let pad_r = 22.0;
     let label_rect = Rect::from_min_size(pos2(row.left() + pad_l, row.top() + 4.0), vec2(w - pad_l - pad_r, 18.0));
-    let track_rect = Rect::from_min_max(pos2(row.left() + pad_l, row.top() + 22.0), pos2(row.right() - pad_r, row.top() + 40.0));
+    let track_rect = Rect::from_min_max(pos2(row.left() + pad_l, row.top() + 24.0), pos2(row.right() - pad_r, row.top() + 44.0));
     let id = ui.id().with(spec.id);
     let resp = ui.interact(track_rect.expand2(vec2(8.0, 2.0)), id, if enabled { Sense::click_and_drag() } else { Sense::hover() });
     // screen readers: a slider named after its control, with its value
@@ -301,7 +301,7 @@ pub fn slider(ui: &mut Ui, spec: &ControlSpec, value: f64, enabled: bool, label_
             ui.ctx().set_cursor_icon(egui::CursorIcon::Text);
         }
     }
-    let ring = 7.0;
+    let ring = 8.0;
     let tx = to_x(v);
     paint_track(ui, track_rect, &spec.track, &t, tx, ring);
     let p = ui.painter();

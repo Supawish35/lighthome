@@ -53,19 +53,14 @@ pub fn show(app: &mut LightcraftApp, ui: &mut egui::Ui) {
             if app.integrated_titlebar {
                 window_handle(app, ui, full, left as f32, 12.0);
             }
-            let mut sw = 640.0f32.min(full.width() - 460.0).max(200.0);
-            if !app.native_menu {
-                // leave room for the in-window menus left of the (centred) search field
-                let menus_right = full.left() + 140.0 + crate::menubar::bar_width(ui) + 24.0;
-                sw = sw.min(2.0 * (full.center().x - menus_right)).max(200.0);
-            }
-            let search_left = full.center().x - sw / 2.0;
             ui.horizontal_centered(|ui| {
                 ui.spacing_mut().item_spacing.x = 4.0;
+                ui.label(egui::RichText::new("Lighthome").font(t.semibold(14.0)).color(t.text));
+                ui.add_space(8.0);
                 if icon_button(ui, "sidebar", Icon::Sidebar, vec2(30.0, 30.0), app.ui.left_panel, true, "Show/hide My Photos panel").clicked() {
                     let _ = app.run("view.leftPanel", json!({}));
                 }
-                ui.add_space(8.0);
+                ui.add_space(6.0);
                 if icon_button(ui, "back", Icon::Back, vec2(30.0, 30.0), false, true, "Back").clicked() {
                     let _ = app.run("view.back", json!({}));
                 }
@@ -73,12 +68,70 @@ pub fn show(app: &mut LightcraftApp, ui: &mut egui::Ui) {
                 if !app.native_menu {
                     // no native menu bar (web, Windows, Linux): menus in the top bar
                     ui.add_space(10.0);
-                    let room = search_left - ui.cursor().left() - 16.0;
-                    crate::menubar::show_in_window(app, ui, room);
+                    let room = (full.center().x - 130.0) - ui.cursor().left() - 16.0;
+                    if room > 40.0 {
+                        crate::menubar::show_in_window(app, ui, room);
+                    }
                 }
             });
-            // search field (centred on the window)
-            let sr = Rect::from_center_size(pos2(full.center().x, full.center().y), vec2(sw, 28.0));
+
+            // Center: Classic Lightroom Module Tabs [ Library | Develop | Export ]
+            let center_x = full.center().x;
+            let tab_w = 76.0;
+            let tab_h = 28.0;
+            let total_tabs_w = tab_w * 3.0 + 8.0 * 2.0;
+            let tabs_start_x = center_x - total_tabs_w / 2.0;
+
+            let is_develop = app.ui.right.is_edit_tool();
+            let modules = [("library", "Library", !is_develop), ("develop", "Develop", is_develop), ("export", "Export", false)];
+
+            for (i, (id, label, active)) in modules.iter().enumerate() {
+                let tab_x = tabs_start_x + (tab_w + 8.0) * i as f32;
+                let r = Rect::from_min_size(pos2(tab_x, full.center().y - tab_h / 2.0), vec2(tab_w, tab_h));
+                let resp = ui.interact(r, egui::Id::new(("module_tab", id)), Sense::click());
+                register(ui.ctx(), format!("tab:{id}"), r);
+
+                let hovered = resp.hovered();
+                let text_color = if *active || hovered { t.text } else { t.text_dim };
+
+                let p = ui.painter();
+                p.text(r.center(), Align2::CENTER_CENTER, crate::i18n::tr(label), t.semibold(13.0), text_color);
+
+                // Subtle underline indicator for active tab
+                if *active {
+                    let underline = Rect::from_min_max(pos2(r.left() + 6.0, full.bottom() - 2.0), pos2(r.right() - 6.0, full.bottom()));
+                    p.rect_filled(underline, 1.0, t.accent);
+                } else if hovered {
+                    let underline = Rect::from_min_max(pos2(r.left() + 12.0, full.bottom() - 1.5), pos2(r.right() - 12.0, full.bottom()));
+                    p.rect_filled(underline, 0.5, t.text_dim);
+                }
+
+                if resp.clicked() {
+                    match *id {
+                        "library" => {
+                            if app.ui.right.is_edit_tool() {
+                                app.ui.right = crate::state::RightPanel::Info;
+                            }
+                        }
+                        "develop" => {
+                            app.ui.right = crate::state::RightPanel::Edit;
+                            if matches!(app.ui.view, crate::state::ViewMode::PhotoGrid | crate::state::ViewMode::SquareGrid) {
+                                app.ui.view = crate::state::ViewMode::Detail;
+                            }
+                        }
+                        "export" => {
+                            let _ = app.run("dialog.export", json!({}));
+                        }
+                        _ => {}
+                    }
+                }
+            }
+
+            // Search field (placed right of the module tabs)
+            let search_area_left = full.center().x + total_tabs_w / 2.0 + 20.0;
+            let search_area_right = (full.right() - 220.0).max(search_area_left + 100.0);
+            let sw = (search_area_right - search_area_left - 36.0).clamp(100.0, 360.0);
+            let sr = Rect::from_min_size(pos2(search_area_left, full.center().y - 14.0), vec2(sw, 28.0));
             let id = crate::text_field::id("field:search");
             if std::mem::take(&mut app.ui.focus_search) {
                 ui.memory_mut(|m| m.request_focus(id));
@@ -113,7 +166,7 @@ pub fn show(app: &mut LightcraftApp, ui: &mut egui::Ui) {
                 let _ = app.run("library.filter", json!({"text": q}));
             }
             // filter icon right of the search field
-            let fr = Rect::from_center_size(pos2(sr.right() + 22.0, sr.center().y), vec2(28.0, 28.0));
+            let fr = Rect::from_center_size(pos2(sr.right() + 20.0, sr.center().y), vec2(28.0, 28.0));
             let fresp = ui.interact(fr, egui::Id::new("filter-btn"), Sense::click());
             register(ui.ctx(), "icon:filter", fr);
             let filtering = app.session.filter != Default::default() || app.ui.filter_bar;

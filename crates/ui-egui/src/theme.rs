@@ -108,9 +108,9 @@ impl Default for Tokens {
             mask_overlay: Color32::from_rgba_unmultiplied(0xe0, 0x20, 0x30, 110),
             top_bar_h: 42.0,
             bottom_bar_h: 48.0,
-            panel_w: 270.0,
+            panel_w: 320.0,
             strip_w: 48.0,
-            slider_row_h: 45.0,
+            slider_row_h: 48.0,
             section_h: 57.0,
             film_h: 142.0,
         }
