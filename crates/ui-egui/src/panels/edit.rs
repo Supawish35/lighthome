@@ -1119,13 +1119,13 @@ fn hdr_row(app: &mut LightcraftApp, ui: &mut egui::Ui, d: &DevelopSettings) {
 fn grading(app: &mut LightcraftApp, ui: &mut egui::Ui, d: &DevelopSettings) {
     let t = Tokens::get(ui.ctx());
     let w = ui.available_width();
-    let (area, _) = ui.allocate_exact_size(vec2(w, 250.0), Sense::hover());
-    let big = 44.0;
-    let small = 38.0;
+    let (area, _) = ui.allocate_exact_size(vec2(w, 290.0), Sense::hover());
+    let big = 58.0;
+    let small = 48.0;
     let wheels = [
-        ("midtones", "Midtones", pos2(area.center().x, area.top() + 60.0), big),
-        ("shadows", "Shadows", pos2(area.left() + w * 0.28, area.top() + 170.0), small),
-        ("highlights", "Highlights", pos2(area.left() + w * 0.72, area.top() + 170.0), small),
+        ("midtones", "Midtones", pos2(area.center().x, area.top() + 74.0), big),
+        ("shadows", "Shadows", pos2(area.left() + w * 0.28, area.top() + 204.0), small),
+        ("highlights", "Highlights", pos2(area.left() + w * 0.72, area.top() + 204.0), small),
     ];
     for (key, label, c, rad) in wheels {
         let wh = match key {

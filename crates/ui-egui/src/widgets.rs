@@ -338,11 +338,14 @@ pub fn section_header(ui: &mut Ui, id: &str, title: &str, open: bool, enabled: O
     register(ui.ctx(), format!("section:{id}"), r);
     let p = ui.painter();
     if ui.rect_contains_pointer(r) {
-        p.rect_filled(r, 0.0, t.chrome.gamma_multiply(1.06));
+        p.rect_filled(r, 0.0, t.hover.gamma_multiply(0.4));
+    }
+    if open {
+        p.rect_filled(Rect::from_min_max(pos2(r.left() + 10.0, r.top() + 12.0), pos2(r.left() + 13.0, r.bottom() - 12.0)), 1.5, t.accent);
     }
     let chev = Rect::from_center_size(pos2(r.left() + 30.0, r.center().y), vec2(14.0, 14.0));
-    paint(p, chev, if open { Icon::ChevronDown } else { Icon::ChevronRight }, t.text_label);
-    p.text(pos2(r.left() + 44.0, r.center().y), Align2::LEFT_CENTER, title, t.semibold(14.0), t.text);
+    paint(p, chev, if open { Icon::ChevronDown } else { Icon::ChevronRight }, if open { t.text } else { t.text_label });
+    p.text(pos2(r.left() + 44.0, r.center().y), Align2::LEFT_CENTER, title, t.semibold(14.0), if open { t.text } else { t.text_label });
     let mut toggled = None;
     // shown while the pointer is anywhere on the header: `resp.hovered()` turns false as soon as the
     // pointer is over the eye itself (the eye is on top), which hid the eye before it could be
@@ -383,16 +386,22 @@ pub fn flyout_row(ui: &mut Ui, id: &str, title: &str, icon: Icon, open: bool) ->
     resp.widget_info(|| egui::WidgetInfo::selected(egui::WidgetType::CollapsingHeader, true, open, title));
     register(ui.ctx(), format!("flyout:{id}"), r);
     let p = ui.painter();
-    p.rect_filled(r, 4.0, if resp.hovered() { t.hover.gamma_multiply(0.8) } else { t.inset });
+    p.rect(
+        r,
+        egui::CornerRadius::same(6),
+        if resp.hovered() { t.hover.gamma_multiply(0.8) } else { t.inset },
+        Stroke::new(1.0, if open { t.accent.gamma_multiply(0.5) } else { t.divider }),
+        egui::StrokeKind::Inside,
+    );
     let tile = Rect::from_min_size(pos2(r.left() + 4.0, r.top() + 4.0), vec2(r.height() - 8.0, r.height() - 8.0));
-    p.rect_filled(tile, 3.0, t.chrome.gamma_multiply(1.15));
-    paint(p, tile.shrink(3.0), icon, t.text_label);
-    p.text(pos2(tile.right() + 10.0, r.center().y), Align2::LEFT_CENTER, title, t.semibold(13.0), t.text_label);
+    p.rect_filled(tile, egui::CornerRadius::same(4), t.chrome.gamma_multiply(1.15));
+    paint(p, tile.shrink(3.0), icon, if open { t.text } else { t.text_label });
+    p.text(pos2(tile.right() + 10.0, r.center().y), Align2::LEFT_CENTER, title, t.semibold(13.0), if open { t.text } else { t.text_label });
     paint(
         p,
         Rect::from_center_size(pos2(r.right() - 14.0, r.center().y), vec2(12.0, 12.0)),
         if open { Icon::ChevronDown } else { Icon::TriangleLeft },
-        t.text_label,
+        if open { t.text } else { t.text_label },
     );
     resp
 }
