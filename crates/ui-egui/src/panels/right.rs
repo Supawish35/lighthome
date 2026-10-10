@@ -1,7 +1,7 @@
 //! The right-hand panel next to the tool strip: Edit, Crop, Remove, Masking, Red Eye, Info,
 //! Keywords, Versions, Activity.
 
-use egui::{Align2, Rect, Sense, pos2, vec2};
+use egui::{Align2, Rect, Sense, Stroke, pos2, vec2};
 use lightcraft_catalog::PhotoId;
 use serde_json::json;
 
@@ -31,8 +31,7 @@ pub fn show(app: &mut LightcraftApp, ui: &mut egui::Ui) {
                 });
                 return;
             }
-            let r = ui.max_rect();
-            super::empty_message(ui, r, "No photo selected", "Select a photo to edit");
+            empty_state(app, ui);
             return;
         };
         egui::ScrollArea::vertical().id_salt("right-scroll").auto_shrink([false, false]).show(ui, |ui| {
@@ -1144,6 +1143,57 @@ fn activity(app: &mut LightcraftApp, ui: &mut egui::Ui, id: PhotoId) {
             });
         }
     });
+}
+
+fn empty_state(app: &mut LightcraftApp, ui: &mut egui::Ui) {
+    let t = Tokens::get(ui.ctx());
+    let r = ui.max_rect();
+    let center = r.center();
+
+    // Subtle container card for the empty state
+    let card_w = (r.width() - 32.0).clamp(180.0, 320.0);
+    let card_h = 240.0;
+    let card_rect = Rect::from_center_size(center, vec2(card_w, card_h));
+
+    let p = ui.painter();
+    p.rect(card_rect, egui::CornerRadius::same(8), t.inset.gamma_multiply(0.4), Stroke::new(1.0, t.divider), egui::StrokeKind::Inside);
+
+    // Decorative icon badge
+    let icon_box = Rect::from_center_size(pos2(center.x, card_rect.top() + 46.0), vec2(48.0, 48.0));
+    p.rect_filled(icon_box, egui::CornerRadius::same(24), t.field);
+    paint(p, icon_box.shrink(12.0), Icon::Sliders, t.icon);
+
+    // Title and descriptive subtitle
+    p.text(pos2(center.x, card_rect.top() + 90.0), Align2::CENTER_CENTER, crate::i18n::tr("No photo selected"), t.semibold(16.0), t.text);
+    p.text(
+        pos2(center.x, card_rect.top() + 114.0),
+        Align2::CENTER_CENTER,
+        crate::i18n::tr("Select a photo to start editing"),
+        t.font(12.5),
+        t.text_dim,
+    );
+
+    // Quick action buttons inside the card
+    let mut actions_child = ui.new_child(
+        egui::UiBuilder::new()
+            .max_rect(Rect::from_min_max(
+                pos2(card_rect.left() + 20.0, card_rect.top() + 140.0),
+                pos2(card_rect.right() - 20.0, card_rect.bottom() - 16.0),
+            ))
+            .layout(egui::Layout::top_down(egui::Align::Center)),
+    );
+
+    actions_child.spacing_mut().item_spacing.y = 8.0;
+
+    let grid_label = crate::i18n::tr("Open Photo Grid  (G)");
+    if text_button(&mut actions_child, "emptyStateGrid", grid_label, false).clicked() {
+        let _ = app.run("view.photoGrid", json!({}));
+    }
+
+    let import_label = crate::i18n::tr("Import Photos…");
+    if text_button(&mut actions_child, "emptyStateImport", import_label, false).clicked() {
+        let _ = app.run("file.addPhotos", json!({}));
+    }
 }
 
 #[cfg(test)]

@@ -228,7 +228,7 @@ impl NativeMenu {
 
         // the application menu
         let app_menu = Submenu::new("LightCraft", true);
-        let about = MenuItem::with_id("app.about", lightcraft_ui_egui::i18n::tr("About LightCraft"), true, None);
+        let about = MenuItem::with_id("app.about", lightcraft_ui_egui::i18n::tr("About Lighthome"), true, None);
         let settings = MenuItem::with_id(SETTINGS, lightcraft_ui_egui::i18n::tr("Settings…"), true, accelerator(SETTINGS_KEY));
         let quit = MenuItem::with_id(QUIT, lightcraft_ui_egui::i18n::tr("Quit LightCraft"), true, accelerator("Cmd+Q"));
         let _ = app_menu.append_items(&[

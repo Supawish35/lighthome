@@ -86,7 +86,7 @@ pub fn show(app: &mut LightcraftApp, ui: &mut egui::Ui) {
             let focused = ui.memory(|m| m.has_focus(id));
             ui.painter().rect(
                 sr,
-                4.0,
+                6.0,
                 if focused { t.canvas } else { t.field },
                 Stroke::new(1.0, if focused { t.accent } else { t.field_border }),
                 StrokeKind::Inside,

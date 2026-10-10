@@ -518,6 +518,8 @@ fn cell(app: &mut LightcraftApp, ui: &mut egui::Ui, id: PhotoId, r: Rect, square
             p.rect_stroke(fit.expand(if square { 2.0 } else { 0.0 }), 0.0, Stroke::new(2.0, Color32::WHITE), StrokeKind::Outside);
         } else if selected {
             p.rect_stroke(fit, 0.0, Stroke::new(2.0, Color32::from_gray(170)), StrokeKind::Outside);
+        } else if resp.hovered() {
+            p.rect_stroke(fit, 0.0, Stroke::new(1.0, Color32::from_gray(110)), StrokeKind::Outside);
         }
     } else {
         let ph = img_rect.shrink(if square { 20.0 } else { 0.0 });

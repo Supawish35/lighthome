@@ -1182,3 +1182,15 @@ fn the_tracklog_toast_shows_after_a_while() {
     assert!(h.app.ui.toast.as_ref().is_some_and(|t| t.0.starts_with("Tagged")), "{:?}", h.app.ui.toast);
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+#[test]
+fn right_panel_empty_state_shows_guidance_and_action_buttons() {
+    let mut h = demo([1200.0, 800.0], json!({"view": "detail", "right": "edit"}));
+    // Deselect active photo to induce empty state
+    h.app.session.selection.active = None;
+    h.step();
+    // Verify panel and action buttons exist in widget registry
+    assert!(h.app.widgets.iter().any(|(id, _)| id == "panel:right_panel"));
+    assert!(h.app.widgets.iter().any(|(id, _)| id == "button:emptyStateGrid"));
+    assert!(h.app.widgets.iter().any(|(id, _)| id == "button:emptyStateImport"));
+}
