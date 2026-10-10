@@ -118,6 +118,7 @@ pub const UI_COMMANDS: &[UiCommand] = &[
     ("panel.versions", "Versions", Some("Shift+V"), "Window"),
     ("panel.activity", "History", None, "Window"),
     ("panel.close", "Close Panel", None, ""),
+    ("panel.toggleAll", "Toggle All Trays", Some("Tab"), "Window"),
     ("section.light", "Light", Some("Cmd+1"), "Window>Edit Sections"),
     ("section.color", "Color", Some("Cmd+2"), "Window>Edit Sections"),
     ("section.effects", "Effects", Some("Cmd+3"), "Window>Edit Sections"),
@@ -812,6 +813,20 @@ pub fn run_ui_command(app: &mut LightcraftApp, id: &str, p: &Value) -> Option<Re
         "panel.close" => {
             app.ui.right = RightPanel::None;
             app.ui.presets = false;
+            Ok(Value::Null)
+        }
+        "panel.toggleAll" => {
+            let any_open = app.ui.left_panel || app.ui.right != RightPanel::None || app.ui.presets || app.ui.filmstrip;
+            if any_open {
+                app.ui.left_panel = false;
+                app.ui.right = RightPanel::None;
+                app.ui.presets = false;
+                app.ui.filmstrip = false;
+            } else {
+                app.ui.left_panel = true;
+                app.ui.right = RightPanel::Edit;
+                app.ui.filmstrip = true;
+            }
             Ok(Value::Null)
         }
         s if s.starts_with("section.") => {
@@ -1591,7 +1606,9 @@ pub fn run_ui_command(app: &mut LightcraftApp, id: &str, p: &Value) -> Option<Re
 pub fn ui_enabled(app: &LightcraftApp, id: &str) -> bool {
     match id {
         "dialog.contactSheet" | "app.contactSheet" => !cfg!(target_arch = "wasm32") && app.session.active().is_some() && app.export.is_none(),
-        s if s.starts_with("panel.") || s.starts_with("tool.") || s.starts_with("section.") => app.session.active().is_some() || s == "panel.close",
+        s if s.starts_with("panel.") || s.starts_with("tool.") || s.starts_with("section.") => {
+            app.session.active().is_some() || s == "panel.close" || s == "panel.toggleAll"
+        }
         "app.export" | "dialog.export" | "dialog.createPreset" | "dialog.rename" | "dialog.captureTime" | "dialog.copySettings" => {
             app.session.active().is_some()
         }
