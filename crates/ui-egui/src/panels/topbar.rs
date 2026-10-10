@@ -1,6 +1,6 @@
 //! The top bar: sidebar toggle, back/forward, search, filter, and the right-hand icons.
 
-use egui::{Align2, Rect, Sense, Stroke, StrokeKind, pos2, vec2};
+use egui::{Align2, Color32, Rect, Sense, Stroke, StrokeKind, pos2, vec2};
 use serde_json::json;
 
 use crate::LightcraftApp;
@@ -127,9 +127,12 @@ pub fn show(app: &mut LightcraftApp, ui: &mut egui::Ui) {
                 }
             }
 
+            let has_win_controls = !cfg!(target_os = "macos");
+            let win_ctrl_w = if has_win_controls { 42.0 * 3.0 + 10.0 } else { 0.0 };
+
             // Search field (placed right of the module tabs)
             let search_area_left = full.center().x + total_tabs_w / 2.0 + 20.0;
-            let search_area_right = (full.right() - 220.0).max(search_area_left + 100.0);
+            let search_area_right = (full.right() - 220.0 - win_ctrl_w).max(search_area_left + 100.0);
             let sw = (search_area_right - search_area_left - 36.0).clamp(100.0, 360.0);
             let sr = Rect::from_min_size(pos2(search_area_left, full.center().y - 14.0), vec2(sw, 28.0));
             let id = crate::text_field::id("field:search");
@@ -197,8 +200,8 @@ pub fn show(app: &mut LightcraftApp, ui: &mut egui::Ui) {
             if fresp.clicked() {
                 let _ = app.run("view.filterBar", json!({}));
             }
-            // right icons
-            let mut x = full.right() - 18.0;
+            // right utility icons
+            let mut x = full.right() - 18.0 - win_ctrl_w;
             // saving is failing: the cloud icon turns into a warning until a save succeeds
             let unsaved = app.session.unsaved().map(|(n, e)| {
                 crate::i18n::tr_format!(
@@ -239,6 +242,64 @@ pub fn show(app: &mut LightcraftApp, ui: &mut egui::Ui) {
                     let _ = app.run(cmd, json!({}));
                 }
                 x -= 40.0;
+            }
+
+            // Integrated window controls (Minimize, Fullscreen, Close)
+            if has_win_controls {
+                let btn_w = 42.0;
+                let h = full.height();
+                let btns = [
+                    ("window:close", Icon::Close, "Close"),
+                    ("window:fullscreen", Icon::Fullscreen, "Toggle Fullscreen"),
+                    ("window:minimize", Icon::Minus, "Minimize"),
+                ];
+
+                for (i, (id, icon, tip)) in btns.iter().enumerate() {
+                    let rx = full.right() - btn_w * (i + 1) as f32;
+                    let r = Rect::from_min_size(pos2(rx, full.top()), vec2(btn_w, h));
+                    let resp = ui.interact(r, egui::Id::new(("win_ctrl", id)), Sense::click()).on_hover_text(crate::i18n::tr(tip));
+                    register(ui.ctx(), id.to_string(), r);
+
+                    let hovered = resp.hovered();
+                    let is_close = *id == "window:close";
+                    let p = ui.painter();
+
+                    if hovered {
+                        let fill = if is_close { Color32::from_rgb(224, 74, 74) } else { t.hover.gamma_multiply(0.8) };
+                        p.rect_filled(r, 0.0, fill);
+                    }
+
+                    let icon_color = if hovered && is_close {
+                        Color32::WHITE
+                    } else if hovered {
+                        t.text
+                    } else {
+                        t.icon
+                    };
+
+                    paint(p, Rect::from_center_size(r.center(), vec2(13.0, 13.0)), *icon, icon_color);
+
+                    if resp.clicked() {
+                        match *id {
+                            "window:close" => {
+                                ui.ctx().send_viewport_cmd(egui::ViewportCommand::Close);
+                            }
+                            "window:fullscreen" => {
+                                let fullscreen = ui.input(|i| i.viewport().fullscreen).unwrap_or(app.window_is_fullscreen);
+                                app.window_is_fullscreen = !fullscreen;
+                                ui.ctx().send_viewport_cmd(egui::ViewportCommand::Fullscreen(!fullscreen));
+                            }
+                            "window:minimize" => {
+                                ui.ctx().send_viewport_cmd(egui::ViewportCommand::Minimized(true));
+                            }
+                            _ => {}
+                        }
+                    }
+                }
+
+                // Subtle divider between utility icons and window controls
+                let div_x = full.right() - btn_w * 3.0 - 5.0;
+                ui.painter().line_segment([pos2(div_x, full.center().y - 10.0), pos2(div_x, full.center().y + 10.0)], Stroke::new(1.0, t.divider));
             }
             let _ = Align2::CENTER_CENTER;
         });

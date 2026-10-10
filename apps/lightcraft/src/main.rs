@@ -746,6 +746,7 @@ fn main() -> eframe::Result {
             .with_fullsize_content_view(true)
             .with_titlebar_shown(false)
             .with_title_shown(false)
+            .with_decorations(false)
             .with_icon(app_icon())
             // Wayland matches the window to packaging/linux/ai.storyteller.lightcraft.desktop by this id
             .with_app_id(APP_ID),
@@ -770,7 +771,7 @@ fn main() -> eframe::Result {
                 app.ui = ui;
             }
             lightcraft_ui_egui::i18n::set_language(app.ui.language);
-            app.integrated_titlebar = cfg!(target_os = "macos");
+            app.integrated_titlebar = true;
             app.notices.extend(prefs_warning);
             app.notices.extend(launch_notices);
             // what's on disk now: only changes are written

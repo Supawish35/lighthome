@@ -83,6 +83,8 @@ pub enum Icon {
     Chat,
     /// Face boxes on/off: four corner brackets round a small face.
     FaceBox,
+    /// Fullscreen toggle: 4 corner brackets expanding outward.
+    Fullscreen,
 }
 
 struct Pen<'a> {
@@ -499,6 +501,12 @@ pub fn paint(p: &Painter, rect: Rect, icon: Icon, color: Color32) {
             for x in [6.8, 10.0, 13.2] {
                 pen.dot(x, 8.5, 1.1);
             }
+        }
+        Fullscreen => {
+            pen.line(&[(4.0, 7.5), (4.0, 4.0), (7.5, 4.0)]);
+            pen.line(&[(16.0, 7.5), (16.0, 4.0), (12.5, 4.0)]);
+            pen.line(&[(4.0, 12.5), (4.0, 16.0), (7.5, 16.0)]);
+            pen.line(&[(16.0, 12.5), (16.0, 16.0), (12.5, 16.0)]);
         }
     }
 }
